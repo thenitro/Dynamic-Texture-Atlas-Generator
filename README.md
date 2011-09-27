@@ -57,6 +57,7 @@ Use the DynamicAtlas.fromMovieClipContainer() static method to convert your flas
 ### Using the sample included in the package ###
 The sample included is a simple FlashDevelop project which uses a library item as base MovieClip to create a TextureAtlas at runtime.
 If you plan to use it, you need to add the Classpaths of your copy of the starling framework and of this extension (dynamicTextureAtlasGenerator).
+You should also link the sample swc to your project to be able to use the assets inside of it.
 #### Requirements ####
 Please refer to the [starling documentation](http://doc.starling-framework.org/core/) or to the [starling tutorial](http://www.bytearray.org/?p=3371) for requirements and setup.
 

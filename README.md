@@ -1,6 +1,8 @@
 Dynamic Texture Atlas Generator (Starling framework Extension)
 ========
 
+# version 0.7 #
+
 This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime. 
 By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures. 
 This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
@@ -30,6 +32,13 @@ This extension could save you a lot of time specially if you'll be coding mobile
 	
 	Returns:
 		* A TextureAtlas.
+		
+	Enclose inside a try/catch for error handling:
+		try {
+				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
+			} catch (e:Error) {
+				trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
+			}
 
 ### Steps to make your own Dynamic Texture Atlas ###
 #### Base Sprite sheet creation (Inside Flash IDE) ####

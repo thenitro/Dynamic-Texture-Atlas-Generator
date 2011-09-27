@@ -14,22 +14,52 @@ package com.emibap.textureAtlas
 	import com.emibap.textureAtlas.TextureItem;
 	
 	/**
-	 * DynamicAtlas Class
-	 * @author Emibap
-	 * 
-	 * 
-	 */
-	
-	/**
-	 * stats.as
-	 * https://github.com/mrdoob/Hi-ReS-Stats
-	 * 
-	 * Released under MIT license:
-	 * http://www.opensource.org/licenses/mit-license.php
+	 * DynamicAtlas.as
+	 * https://github.com/emibap/Dynamic-Texture-Atlas-Generator
+	 * @author Emibap (Emiliano Angelini) - http://www.emibap.com
 	 *
-	 * How to use:
+	 * Dynamic Texture Atlas Generator (Starling framework Extension)
+	 * ========
 	 * 
-	 *	addChild( new Stats() );
+	 * # version 0.7 #
+	 * 
+	 * This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime. 
+	 * By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures. 
+	 * This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
+	 * 
+	 * ### Features ###
+	 * 
+	 * * Dynamic creation of a Texture Altas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet
+	 * * Filters made to the objects are captured
+	 * * Automatically detects the objects bounds so you don't necesarily have to set the registration points to TOP LEFT
+	 * 
+	 * ### TODO List ###
+	 * 
+	 * * Scaling all the objects based on a parameter before taking snapshots (for optimal memory usage)
+	 * * Further code optimization
+	 * * Documentation (?)
+	 * 
+	 * ### Whish List ###
+	 * * Optional division of the process into small intervals (for smooth performance of the app)
+	 * 
+	 * ### Usage ###
+	 * 	Use the static method DynamicAtlas.fromMovieClipContainer.
+	 * 	
+	 * 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip):starling.textures.TextureAtlas
+	 * 	
+	 * 	Params:
+	 * 		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
+	 * 	
+	 * 	Returns:
+	 * 		* A TextureAtlas.
+	 * 		
+	 * 	Enclose inside a try/catch for error handling:
+	 * 		try {
+	 * 				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
+	 * 			} catch (e:Error) {
+	 * 				trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
+	 * 			}
+	 * 
 	 *
 	**/
 	
@@ -79,8 +109,6 @@ package com.emibap.textureAtlas
 			
 			var itemsLen:int;
 			var itm:TextureItem;
-			
-			
 			
 			var m:uint;
 			

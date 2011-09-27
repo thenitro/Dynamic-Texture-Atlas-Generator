@@ -12,23 +12,23 @@ package {
 		
 		public function DynAtlasSample(){
 			super();
-			setup();
+			init();
 		}
 		
-		private function setup():void{
+		private function init():void{
 			var mc:SheetMC = new SheetMC();
-			
-			var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
-			
-			trace("atlas:", atlas);
-			
-			var mario_mc:MovieClip = new MovieClip(atlas.getTextures("mario"));
-			addChild(mario_mc);
-			
-			mario_mc.x = mario_mc.y = 50;
-			
-			Starling.juggler.add(mario_mc);
-			
+			try {
+				
+				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
+				trace("atlas:", atlas);
+				var mario_mc:MovieClip = new MovieClip(atlas.getTextures("mario"));
+				addChild(mario_mc);
+				mario_mc.x = mario_mc.y = 50;
+				Starling.juggler.add(mario_mc);
+				
+			} catch (e:Error) {
+				trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
+			}
 		}
 	}
 }

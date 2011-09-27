@@ -14,28 +14,44 @@ package com.emibap.textureAtlas
 	import com.emibap.textureAtlas.TextureItem;
 	
 	/**
-	 * ...
+	 * DynamicAtlas Class
 	 * @author Emibap
+	 * 
+	 * 
 	 */
+	
+	/**
+	 * stats.as
+	 * https://github.com/mrdoob/Hi-ReS-Stats
+	 * 
+	 * Released under MIT license:
+	 * http://www.opensource.org/licenses/mit-license.php
+	 *
+	 * How to use:
+	 * 
+	 *	addChild( new Stats() );
+	 *
+	**/
+	
 	public class DynamicAtlas
 	{
-		static private const DEFAULT_CANVAS_WIDTH:Number = 640;
+		static protected const DEFAULT_CANVAS_WIDTH:Number = 640;
 		
-		static private var _items:Array;
-		static private var _canvas:Sprite;
+		static protected var _items:Array;
+		static protected var _canvas:Sprite;
 		
-		static private var _currentLab:String = "";
+		static protected var _currentLab:String = "";
 		
-		static private var _x:Number;
-		static private var _y:Number;
+		static protected var _x:Number;
+		static protected var _y:Number;
 		
-		static private var _bounds:Rectangle;
-		static private var _bData:BitmapData;
-		static private var _mat:Matrix;
-		static private var _margin:Number = 0;
-		static private var _preserveColor:Boolean = true;
+		static protected var _bounds:Rectangle;
+		static protected var _bData:BitmapData;
+		static protected var _mat:Matrix;
+		static protected var _margin:Number = 0;
+		static protected var _preserveColor:Boolean = true;
 		
-		
+		// Will not be used - Only using one static method
 		public function DynamicAtlas()
 		{
 		
@@ -127,7 +143,7 @@ package com.emibap.textureAtlas
 			return atlas;
 		}
 		
-		static private function drawItem(clip:MovieClip, name:String = "", baseName:String ="", clipColorTransform:ColorTransform=null):TextureItem{
+		static protected function drawItem(clip:MovieClip, name:String = "", baseName:String ="", clipColorTransform:ColorTransform=null):TextureItem{
 			
 			
 			_bounds = clip.getBounds(clip.parent);
@@ -220,7 +236,7 @@ package com.emibap.textureAtlas
 			}
 		}
 		
-		static private function appendIntToString(num:int, numOfPlaces:int):String{
+		static protected function appendIntToString(num:int, numOfPlaces:int):String{
 			var numString:String = num.toString();
 			var outString:String = "";
 			for(var i:int=0; i<numOfPlaces - numString.length; i++){

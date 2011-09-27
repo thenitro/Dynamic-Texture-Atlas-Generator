@@ -16,11 +16,7 @@ package
             stage.scaleMode = StageScaleMode.NO_SCALE;
             stage.align = StageAlign.TOP_LEFT;
             
-            Starling.multitouchEnabled = true;
-            
-            //mStarling = new Starling(Game, stage);
             mStarling = new Starling(DynAtlasSample, stage);
-            //mStarling.simulateMultitouch = true;
             mStarling.enableErrorChecking = false;
             mStarling.start();
         }

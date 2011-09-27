@@ -5,9 +5,9 @@
     <movie outputType="Application" />
     <movie input="" />
     <movie path="bin\DynTextureAtlasSample.swf" />
-    <movie fps="30" />
-    <movie width="800" />
-    <movie height="600" />
+    <movie fps="60" />
+    <movie width="320" />
+    <movie height="480" />
     <movie version="11" />
     <movie minorVersion="0" />
     <movie platform="Flash Player" />
@@ -86,7 +86,8 @@
   <!-- Other project options -->
   <options>
     <option showHiddenPaths="False" />
-    <option testMovie="Default" />
+    <option testMovie="OpenDocument" />
+    <option testMovieCommand="bin\index.html" />
   </options>
   <!-- Plugin storage -->
   <storage />

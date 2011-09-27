@@ -1,7 +1,7 @@
 Dynamic Texture Atlas Generator (Starling framework Extension)
 ========
 
-# version 0.7 #
+# version 0.1 #
 
 This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime. 
 By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Atlas, and convert everything from vectors to bitmap textures. 

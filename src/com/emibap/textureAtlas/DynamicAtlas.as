@@ -19,8 +19,6 @@ package com.emibap.textureAtlas
 	 */
 	public class DynamicAtlas
 	{
-		
-		
 		static private const DEFAULT_CANVAS_WIDTH:Number = 640;
 		
 		static private var _items:Array;
@@ -32,8 +30,8 @@ package com.emibap.textureAtlas
 		static private var _y:Number;
 		
 		static private var _bounds:Rectangle;
-		static private var bData:BitmapData;
-		static private var mat:Matrix;
+		static private var _bData:BitmapData;
+		static private var _mat:Matrix;
 		static private var _margin:Number = 0;
 		static private var _preserveColor:Boolean = true;
 		
@@ -57,7 +55,6 @@ package com.emibap.textureAtlas
 			var children:uint = swf.numChildren;
 			
 			var canvasData:BitmapData;
-			var matrix:Matrix;
 			
 			var texture:Texture;
 			var xml:XML;
@@ -111,7 +108,9 @@ package com.emibap.textureAtlas
 			for(var k:uint=0; k<itemsLen; k++){
 				
 				itm = _items[k];
-
+				
+				itm.graphic.dispose();
+				
 				// xml
 				subText= new XML(<SubTexture />); 
 				subText.@x = itm.x;
@@ -128,21 +127,6 @@ package com.emibap.textureAtlas
 			return atlas;
 		}
 		
-		/*static private function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
-			var label:String = "";
-			var bounds:Rectangle = clip.getBounds(clip);
-			var itemW:Number = Math.ceil(bounds.x + bounds.width);
-			var itemH:Number = Math.ceil(bounds.y + bounds.height);
-			var bmd:BitmapData = new BitmapData(itemW, itemH, true, 0x00000000);
-			bmd.draw(clip);
-			if(clip.currentLabel != _currentLab && clip.currentLabel != null){
-				_currentLab = clip.currentLabel;
-				label = _currentLab;
-			}
-			var item:TextureItem = new TextureItem(bmd, name, label, baseName);
-			addItem(item);
-			return item;
-		}*/
 		static private function drawItem(clip:MovieClip, name:String = "", baseName:String ="", clipColorTransform:ColorTransform=null):TextureItem{
 			
 			
@@ -164,7 +148,6 @@ package com.emibap.textureAtlas
 				var tmpBData:BitmapData;
 				var filterRect:Rectangle;
 				
-				// initialisation du bData pour le premier filtre
 				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
 				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
 				tmpBData.dispose();
@@ -182,51 +165,31 @@ package com.emibap.textureAtlas
 			realBounds.width = Math.max(realBounds.width, 1);
 			realBounds.height = Math.max(realBounds.height, 1);
 			
-			bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
+			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
 			
-			mat = clip.transform.matrix;
-			mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
+			_mat = clip.transform.matrix;
+			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
 			
-			bData.draw(clip, mat, _preserveColor ? clipColorTransform : null);
+			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
 			
-			//_allBitmaps[i-1] = bData;
 			realBounds.offset(-_x - _margin, -_y - _margin);
-			//_allBounds[bData] = realBounds;
-			
-			
-			
-			
-			
-			
-			
-			
-			
-			
+
 			var label:String = "";
-			//var bounds:Rectangle = clip.getBounds(clip);
-			//var itemW:Number = Math.ceil(bounds.x + bounds.width);
-			//var itemH:Number = Math.ceil(bounds.y + bounds.height);
-			//var bmd:BitmapData = new BitmapData(itemW, itemH, true, 0x00000000);
-			//bmd.draw(clip);
+
 			if(clip.currentLabel != _currentLab && clip.currentLabel != null){
 				_currentLab = clip.currentLabel;
 				label = _currentLab;
 			}
-			//var item:TextureItem = new TextureItem(bmd, name, label, baseName);
-			var item:TextureItem = new TextureItem(bData, name, label, baseName);
-			addItem(item);
+			var item:TextureItem = new TextureItem(_bData, name, label);
+			_items.push(item);
+			_canvas.addChild(item);
 			
 			
 			tmpBData = null;
-			bData = null;
+			_bData = null;
 
 			
 			return item;
-		}
-		
-		static private function addItem(item:TextureItem):void{
-			_items.push(item);
-			_canvas.addChild(item);
 		}
 		
 		static public function layoutChildren():void

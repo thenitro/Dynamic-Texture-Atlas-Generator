@@ -26,5 +26,6 @@ You can also drag all the MovieClips inside another Clip and assign a class to i
 #### TextureAtlas conversion ####
 Load the sprite sheet swf or create an instance of it as a MovieClip
 Use the DynamicAtlas.fromMovieClipContainer() static method to convert your flash.display.MovieClip to a starling.textures.TextureAtlas.
-	
+(don't forget to destroy your now useless MovieClip)
+
 This project began as a fork of the [Texture Atlas Generator](https://github.com/pixelrevision/texture_atlas_generator) by pixelrevision

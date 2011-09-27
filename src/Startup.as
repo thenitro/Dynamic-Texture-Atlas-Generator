@@ -20,7 +20,7 @@ package
             
             //mStarling = new Starling(Game, stage);
             mStarling = new Starling(DynAtlasSample, stage);
-            mStarling.simulateMultitouch = true;
+            //mStarling.simulateMultitouch = true;
             mStarling.enableErrorChecking = false;
             mStarling.start();
         }

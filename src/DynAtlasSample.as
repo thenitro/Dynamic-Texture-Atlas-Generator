@@ -22,8 +22,10 @@ package {
 			
 			trace("atlas:", atlas);
 			
-			var mario_mc:MovieClip = new MovieClip(atlas.getTextures("cloud"));
+			var mario_mc:MovieClip = new MovieClip(atlas.getTextures("mario"));
 			addChild(mario_mc);
+			
+			mario_mc.x = mario_mc.y = 50;
 			
 			Starling.juggler.add(mario_mc);
 			

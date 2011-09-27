@@ -4,13 +4,14 @@ package com.emibap.textureAtlas
 	import flash.display.BitmapData;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
+	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
 	
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
 	
-	import com.pixelrevision.textureAtlas.TextureItem;
+	import com.emibap.textureAtlas.TextureItem;
 	
 	/**
 	 * ...
@@ -20,30 +21,40 @@ package com.emibap.textureAtlas
 	{
 		
 		
-		static private var _canvasWidth:Number = 640;
-		static private var _canvasHeight:Number = 640;
+		static private const DEFAULT_CANVAS_WIDTH:Number = 640;
 		
 		static private var _items:Array;
 		static private var _canvas:Sprite;
 		
 		static private var _currentLab:String = "";
 		
+		static private var _x:Number;
+		static private var _y:Number;
+		
+		static private var _bounds:Rectangle;
+		static private var bData:BitmapData;
+		static private var mat:Matrix;
+		static private var _margin:Number = 0;
+		static private var _preserveColor:Boolean = true;
+		
+		
 		public function DynamicAtlas()
 		{
 		
 		}
 		
-		
 		static public function fromMovieClipContainer(swf:MovieClip):TextureAtlas
 		{
 			var parseFrame:Boolean = false;
 			var selected:MovieClip;
+			var selectedTotalFrames:int;
+			var selectedColorTransform:ColorTransform;
+			
 			var itemW:Number;
 			var itemH:Number;
-			var bounds:Rectangle;
+			
 			
 			var children:uint = swf.numChildren;
-			var framesLen:uint;
 			
 			var canvasData:BitmapData;
 			var matrix:Matrix;
@@ -55,6 +66,11 @@ package com.emibap.textureAtlas
 			
 			var itemsLen:int;
 			var itm:TextureItem;
+			
+			
+			
+			var m:uint;
+			
 			_items = [];
 			
 			if (!_canvas) _canvas = new Sprite();
@@ -64,20 +80,19 @@ package com.emibap.textureAtlas
 			for (var i:uint = 0; i < children; i++)
 			{
 				selected = MovieClip(swf.getChildAt(i));
+				selectedTotalFrames = selected.totalFrames;
+				selectedColorTransform = selected.transform.colorTransform;
+				_x = selected.x;
+				_y = selected.y;
+				
+				m = 0;
+				
 				// check for frames
-				if (selected.totalFrames > 1)
-				{
-					framesLen = selected.totalFrames;
-					for (var m:uint = 0; m < framesLen; m++)
-					{
-						selected.gotoAndStop(m + 1);
-						drawItem(selected, selected.name + "_" + appendIntToString(m, 5), selected.name);
-					}
+				while (++m <= selectedTotalFrames) {
+					selected.gotoAndStop(m);
+					drawItem(selected, selected.name + "_" + appendIntToString(m-1, 5), selected.name, selectedColorTransform);
 				}
-				else
-				{
-					drawItem(selected, selected.name, selected.name);
-				}
+				
 			}
 			
 			_currentLab = "";
@@ -96,12 +111,7 @@ package com.emibap.textureAtlas
 			for(var k:uint=0; k<itemsLen; k++){
 				
 				itm = _items[k];
-				
-				//matrix = new Matrix();
-				//matrix.tx = itm.x;
-				//matrix.ty = itm.y;
-				//canvasData.draw(itm, matrix);
-				
+
 				// xml
 				subText= new XML(<SubTexture />); 
 				subText.@x = itm.x;
@@ -118,7 +128,7 @@ package com.emibap.textureAtlas
 			return atlas;
 		}
 		
-		static private function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
+		/*static private function drawItem(clip:MovieClip, name:String = "", baseName:String =""):TextureItem{
 			var label:String = "";
 			var bounds:Rectangle = clip.getBounds(clip);
 			var itemW:Number = Math.ceil(bounds.x + bounds.width);
@@ -131,6 +141,86 @@ package com.emibap.textureAtlas
 			}
 			var item:TextureItem = new TextureItem(bmd, name, label, baseName);
 			addItem(item);
+			return item;
+		}*/
+		static private function drawItem(clip:MovieClip, name:String = "", baseName:String ="", clipColorTransform:ColorTransform=null):TextureItem{
+			
+			
+			_bounds = clip.getBounds(clip.parent);
+			
+			_bounds.x = 		Math.floor(_bounds.x);
+			_bounds.y = 		Math.floor(_bounds.y);
+			_bounds.height = Math.ceil(_bounds.height);
+			_bounds.width = Math.ceil(_bounds.width);
+			
+			var realBounds:Rectangle = new Rectangle(0, 0, _bounds.width + _margin * 2, _bounds.height + _margin * 2);
+			
+			if (clip.filters.length > 0)
+			{
+				// filters
+				var j:int = 0;
+				var clipFilters:Array = clip.filters;
+				var clipFiltersLength:int = clipFilters.length;
+				var tmpBData:BitmapData;
+				var filterRect:Rectangle;
+				
+				// initialisation du bData pour le premier filtre
+				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
+				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
+				tmpBData.dispose();
+				
+				while (++j < clipFiltersLength) 
+				{
+					tmpBData = new BitmapData(filterRect.width, filterRect.height, true, 0);
+					filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
+					realBounds = realBounds.union(filterRect);
+					tmpBData.dispose();
+				}
+			}
+			
+			realBounds.offset(_bounds.x, _bounds.y);
+			realBounds.width = Math.max(realBounds.width, 1);
+			realBounds.height = Math.max(realBounds.height, 1);
+			
+			bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
+			
+			mat = clip.transform.matrix;
+			mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
+			
+			bData.draw(clip, mat, _preserveColor ? clipColorTransform : null);
+			
+			//_allBitmaps[i-1] = bData;
+			realBounds.offset(-_x - _margin, -_y - _margin);
+			//_allBounds[bData] = realBounds;
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			
+			var label:String = "";
+			//var bounds:Rectangle = clip.getBounds(clip);
+			//var itemW:Number = Math.ceil(bounds.x + bounds.width);
+			//var itemH:Number = Math.ceil(bounds.y + bounds.height);
+			//var bmd:BitmapData = new BitmapData(itemW, itemH, true, 0x00000000);
+			//bmd.draw(clip);
+			if(clip.currentLabel != _currentLab && clip.currentLabel != null){
+				_currentLab = clip.currentLabel;
+				label = _currentLab;
+			}
+			//var item:TextureItem = new TextureItem(bmd, name, label, baseName);
+			var item:TextureItem = new TextureItem(bData, name, label, baseName);
+			addItem(item);
+			
+			
+			tmpBData = null;
+			bData = null;
+
+			
 			return item;
 		}
 		
@@ -151,7 +241,7 @@ package com.emibap.textureAtlas
 			for (var i:uint = 0; i < len; i++)
 			{
 				itm = _items[i];
-				if ((xPos + itm.width) > _canvasWidth)
+				if ((xPos + itm.width) > DEFAULT_CANVAS_WIDTH)
 				{
 					xPos = 0;
 					yPos += maxY;

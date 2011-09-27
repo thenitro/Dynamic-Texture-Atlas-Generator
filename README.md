@@ -11,6 +11,10 @@ This extension could save you a lot of time specially if you'll be coding mobile
 * Filters made to the objects are captured
 * Automatically detects the objects bounds so you don't necesarily have to set the registration points to TOP LEFT
 
+### TODO List ###
+* Scaling all the objects based on a parameter before taking snapshots (for optimal memory usage)
+* Further code optimization
+
 ### Usage ###
 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip):starling.textures.TextureAtlas
 

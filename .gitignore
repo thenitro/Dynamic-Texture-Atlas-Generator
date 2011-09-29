@@ -1,7 +1,7 @@
 .DS_Store
 .project
 .actionScriptProperties
-DynTextureAtlas Sample.as3proj
+DynamicTextureAtlasGenerator.as3proj
 # Lines starting with '#' are considered comments.
 # Ignore any file named foo.txt.
 ## foo.txt

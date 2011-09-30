@@ -12,3 +12,6 @@ DynamicTextureAtlasGenerator.as3proj
 ## !foo.html
 # Ignore objects and archives.
 ## *.[oa]
+obj/DynamicTextureAtlasGeneratorConfig.xml
+
+obj/DynamicTextureAtlasGeneratorConfig.old

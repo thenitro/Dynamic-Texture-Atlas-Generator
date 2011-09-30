@@ -82,14 +82,19 @@ package com.emibap.textureAtlas
 		static protected var _margin:Number = 0;
 		static protected var _preserveColor:Boolean = true;
 		
+		static protected var _scalingCanvas:Sprite;
+		static protected var _scaleFactor:Number;
+		
 		// Will not be used - Only using one static method
 		public function DynamicAtlas()
 		{
 		
 		}
 		
-		static public function fromMovieClipContainer(swf:MovieClip):TextureAtlas
+		static public function fromMovieClipContainer(swf:MovieClip, scaleFactor:Number=1):TextureAtlas
 		{
+			trace("converting MC... scale:", scaleFactor);
+			
 			var parseFrame:Boolean = false;
 			var selected:MovieClip;
 			var selectedTotalFrames:int;
@@ -114,27 +119,41 @@ package com.emibap.textureAtlas
 			var m:uint;
 			
 			_items = [];
+			_scalingCanvas = new Sprite();
+			_scaleFactor = scaleFactor;
+			
 			
 			if (!_canvas) _canvas = new Sprite();
 			
 			swf.gotoAndStop(1);
+			
 			
 			for (var i:uint = 0; i < children; i++)
 			{
 				selected = MovieClip(swf.getChildAt(i));
 				selectedTotalFrames = selected.totalFrames;
 				selectedColorTransform = selected.transform.colorTransform;
-				_x = selected.x;
-				_y = selected.y;
+				_x = 0;//:selected.x;
+				_y = 0;// selected.y;
+				
+				trace("original sel W,H:\t", selected.width, selected.height);
+				
+				selected.scaleX *= _scaleFactor; 
+				selected.scaleY *= _scaleFactor;
+				//swf.removeChild(selected);
+				//_scalingCanvas.addChild(selected);
 				
 				m = 0;
 				
 				// check for frames
 				while (++m <= selectedTotalFrames) {
 					selected.gotoAndStop(m);
-					drawItem(selected, selected.name + "_" + appendIntToString(m-1, 5), selected.name, selectedColorTransform);
+					//drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform);
+					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform);
 				}
 				
+				//_scalingCanvas.removeChild(selected);
+				//swf.addChildAt(selected, i);
 			}
 			
 			_currentLab = "";
@@ -150,8 +169,8 @@ package com.emibap.textureAtlas
 			
 			itemsLen = _items.length;
 			
+			
 			for(var k:uint=0; k<itemsLen; k++){
-				
 				itm = _items[k];
 				
 				itm.graphic.dispose();
@@ -182,57 +201,96 @@ package com.emibap.textureAtlas
 			_bounds.height = Math.ceil(_bounds.height);
 			_bounds.width = Math.ceil(_bounds.width);
 			
+			
+			//var clipChild:MovieClip = MovieClip(clip.getChildAt(0));
+			
+			
 			var realBounds:Rectangle = new Rectangle(0, 0, _bounds.width + _margin * 2, _bounds.height + _margin * 2);
 			
+			
+			//if (clipChild.filters.length > 0)
 			if (clip.filters.length > 0)
 			{
 				// filters
 				var j:int = 0;
-				var clipFilters:Array = clip.filters;
+				//var clipFilters:Array = clipChild.filters.concat();
+				var clipFilters:Array = clip.filters.concat();
 				var clipFiltersLength:int = clipFilters.length;
 				var tmpBData:BitmapData;
 				var filterRect:Rectangle;
 				
+				
 				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
 				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
 				tmpBData.dispose();
+				var filter:Object;
 				
-				while (++j < clipFiltersLength) 
+				//while (++j < clipFiltersLength) 
+				while (j < clipFiltersLength) 
 				{
+					filter = clipFilters[j];
+					
+					if (filter.hasOwnProperty("blurX")) {
+						trace(" filter.blurXY pre:", filter.blurX, filter.blurY);
+						filter.blurX *= _scaleFactor;
+						filter.blurY *= _scaleFactor;
+						trace(" filter.blurXY pos:", filter.blurX, filter.blurY);
+					}
+					if (filter.hasOwnProperty("distance")) {
+						filter.distance *= _scaleFactor;
+						trace(" filter.distance pos:", filter.distance);
+					}
 					tmpBData = new BitmapData(filterRect.width, filterRect.height, true, 0);
 					filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
 					realBounds = realBounds.union(filterRect);
 					tmpBData.dispose();
+					
+					trace(" filterRect WH:", filterRect.width, filterRect.height);
+					
+					j++;
 				}
+				
+				//clipChild.filters = null;
+				clip.filters = clipFilters;
+				//clipChild.filters = clipFilters;
 			}
+			
 			
 			realBounds.offset(_bounds.x, _bounds.y);
 			realBounds.width = Math.max(realBounds.width, 1);
 			realBounds.height = Math.max(realBounds.height, 1);
 			
+			
 			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
+			//_bData = new BitmapData(_bounds.width, _bounds.height, true, 0);
 			
 			_mat = clip.transform.matrix;
+			//_mat = clipChild.transform.matrix;
 			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
 			
+			//_bData.draw(clipChild, _mat, _preserveColor ? clipColorTransform : null);
 			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
+			//_bData.draw(clip, null, _preserveColor ? clipColorTransform : null);
 			
-			realBounds.offset(-_x - _margin, -_y - _margin);
+			//realBounds.offset(-_x - _margin, -_y - _margin);
 
 			var label:String = "";
 
+			//if(clipChild.currentLabel != _currentLab && clipChild.currentLabel != null){
 			if(clip.currentLabel != _currentLab && clip.currentLabel != null){
 				_currentLab = clip.currentLabel;
+				//_currentLab = clipChild.currentLabel;
 				label = _currentLab;
 			}
 			var item:TextureItem = new TextureItem(_bData, name, label);
 			_items.push(item);
 			_canvas.addChild(item);
 			
-			
-			tmpBData = null;
+			//tmpBData = null;
+			trace("Scaled sel W,H:\t", _bData.width, _bData.height);
 			_bData = null;
 
+			
 			
 			return item;
 		}

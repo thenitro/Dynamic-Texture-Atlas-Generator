@@ -2,6 +2,7 @@
 .project
 .actionScriptProperties
 DynamicTextureAtlasGenerator.as3proj
+.obj
 # Lines starting with '#' are considered comments.
 # Ignore any file named foo.txt.
 ## foo.txt

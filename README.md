@@ -72,3 +72,4 @@ You should also link the sample swc to your project to be able to use the assets
 Please refer to the [starling documentation](http://doc.starling-framework.org/core/) or to the [starling tutorial](http://www.bytearray.org/?p=3371) for requirements and setup.
 
 This project began as a fork of the [Texture Atlas Generator](https://github.com/pixelrevision/texture_atlas_generator) by pixelrevision
+Most of this comes thanks to the inspiration (and code) of [Thibault Imbert](http://www.bytearray.org) and [Nicolas Gans](http://www.flashxpress.net/)	

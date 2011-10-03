@@ -15,3 +15,5 @@ DynamicTextureAtlasGenerator.as3proj
 obj/DynamicTextureAtlasGeneratorConfig.xml
 
 obj/DynamicTextureAtlasGeneratorConfig.old
+
+sample/lib/sample_for_atlas.swf

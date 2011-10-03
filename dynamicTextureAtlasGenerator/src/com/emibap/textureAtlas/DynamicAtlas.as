@@ -17,26 +17,30 @@ package com.emibap.textureAtlas
 	 * DynamicAtlas.as
 	 * https://github.com/emibap/Dynamic-Texture-Atlas-Generator
 	 * @author Emibap (Emiliano Angelini) - http://www.emibap.com
-	 *
+	 * Most of this comes thanks to the inspiration (and code) of Thibault Imbert (http://www.bytearray.org) and Nicolas Gans (http://www.flashxpress.net/)
+	 * 
 	 * Dynamic Texture Atlas Generator (Starling framework Extension)
 	 * ========
-	 *
-	 * # version 0.7 #
-	 * First Public version
 	 *
 	 * This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime.
 	 * By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures.
 	 * This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 	 *
+	 * # version 0.8 #
+	 * - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
+	 * - Scaling also applies to filters.
+	 * - Added Margin and PreserveColor Properties
+	 *
 	 * ### Features ###
 	 *
-	 * * Dynamic creation of a Texture Altas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet
+	 * * Dynamic creation of a Texture Atlas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet
 	 * * Filters made to the objects are captured
-	 * * Automatically detects the objects bounds so you don't necesarily have to set the registration points to TOP LEFT
-	 *
+	 * * Color transforms (tint, alpha) are optionally captured
+	 * * Scales the objects (and also the filters) to a specified value
+	 * * Automatically detects the objects bounds so you don't necessarily have to set the registration points to TOP LEFT
+	 * 
 	 * ### TODO List ###
 	 *
-	 * * Scaling all the objects based on a parameter before taking snapshots (for optimal memory usage)
 	 * * Further code optimization
 	 * * Documentation (?)
 	 *
@@ -46,11 +50,14 @@ package com.emibap.textureAtlas
 	 * ### Usage ###
 	 * 	Use the static method DynamicAtlas.fromMovieClipContainer.
 	 *
-	 * 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip):starling.textures.TextureAtlas
+	 * 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
 	 *
-	 * 	Params:
-	 * 		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
-	 *
+	 *	Params:
+	 *		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
+	 *		* scaleFactor:Number - The scaling facture to apply to every object. Default value is 1 (no scaling).
+	 *		* margin:uint - The ammount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
+	 *		* preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
+	 *		
 	 * 	Returns:
 	 * 		* A TextureAtlas.
 	 *
@@ -63,10 +70,6 @@ package com.emibap.textureAtlas
 	 *
 	 *  History:
 	 *  -------
-	 * # version 0.8 #
-	 * - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
-	 * - Scaling also applies to filters.
-	 * - Added Margin and PreserveColor Properties
 	 *
 	 * # version 0.7 #
 	 * First Public version
@@ -84,8 +87,6 @@ package com.emibap.textureAtlas
 		static protected var _x:Number;
 		static protected var _y:Number;
 		
-		static protected var _bounds:Rectangle;
-		static protected var _realBounds:Rectangle
 		static protected var _bData:BitmapData;
 		static protected var _mat:Matrix;
 		static protected var _margin:Number;
@@ -216,22 +217,20 @@ package com.emibap.textureAtlas
 			xml = null;
 			_canvas = null;
 			_currentLab = null;
-			_x = _y = _margin = null;
-			_bounds = _realBounds = null;
-			
+			//_x = _y = _margin = null;
 			
 			return atlas;
 		}
 		
 		static protected function drawItem(clip:MovieClip, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
 		{
-			_bounds = clip.getBounds(clip.parent);
-			_bounds.x = Math.floor(_bounds.x);
-			_bounds.y = Math.floor(_bounds.y);
-			_bounds.height = Math.ceil(_bounds.height);
-			_bounds.width = Math.ceil(_bounds.width);
+			var bounds:Rectangle = clip.getBounds(clip.parent);
+			bounds.x = Math.floor(bounds.x);
+			bounds.y = Math.floor(bounds.y);
+			bounds.height = Math.ceil(bounds.height);
+			bounds.width = Math.ceil(bounds.width);
 			
-			_realBounds = new Rectangle(0, 0, _bounds.width + _margin * 2, _bounds.height + _margin * 2);
+			var realBounds:Rectangle = new Rectangle(0, 0, bounds.width + _margin * 2, bounds.height + _margin * 2);
 			
 			// Checking filters in case we need to expand the outer bounds
 			if (clip.filters.length > 0)
@@ -244,7 +243,7 @@ package com.emibap.textureAtlas
 				var tmpBData:BitmapData;
 				var filterRect:Rectangle;
 				
-				tmpBData = new BitmapData(_realBounds.width, _realBounds.height, false);
+				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
 				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
 				tmpBData.dispose();
 				
@@ -252,23 +251,23 @@ package com.emibap.textureAtlas
 				{
 					tmpBData = new BitmapData(filterRect.width, filterRect.height, true, 0);
 					filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
-					_realBounds = _realBounds.union(filterRect);
+					realBounds = realBounds.union(filterRect);
 					tmpBData.dispose();
 				}
 			}
 			
-			_realBounds.offset(_bounds.x, _bounds.y);
-			_realBounds.width = Math.max(_realBounds.width, 1);
-			_realBounds.height = Math.max(_realBounds.height, 1);
+			realBounds.offset(bounds.x, bounds.y);
+			realBounds.width = Math.max(realBounds.width, 1);
+			realBounds.height = Math.max(realBounds.height, 1);
 			
-			_bData = new BitmapData(_realBounds.width, _realBounds.height, true, 0);
+			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
 			
 			_mat = clip.transform.matrix;
-			_mat.translate(-_realBounds.x + _margin, -_realBounds.y + _margin);
+			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
 			
 			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
 			
-			//_realBounds.offset(-_x - _margin, -_y - _margin);
+			//realBounds.offset(-_x - _margin, -_y - _margin);
 			
 			var label:String = "";
 			

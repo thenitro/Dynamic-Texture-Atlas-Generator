@@ -33,8 +33,8 @@ This extension could save you a lot of time specially if you'll be coding mobile
 	
 	Params:
 		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
-		* scaleFactor:Number - The scaling facture to apply to every object. Default value is 1 (no scaling).
-		* margin:uint - The ammount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
+		* scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
+		* margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
 		* preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
 		
 	Returns:

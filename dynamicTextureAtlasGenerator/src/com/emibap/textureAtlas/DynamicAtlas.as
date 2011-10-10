@@ -2,14 +2,21 @@ package com.emibap.textureAtlas
 {
 	
 	import flash.display.BitmapData;
+	import flash.display.DisplayObject;
 	import flash.display.MovieClip;
 	import flash.display.Sprite;
 	import flash.geom.ColorTransform;
 	import flash.geom.Matrix;
 	import flash.geom.Rectangle;
+	import flash.text.AntiAliasType;
+	import flash.text.Font;
+	import flash.text.TextFieldAutoSize;
+	import flash.text.TextFormat;
+	import starling.text.BitmapFont;
 	
 	import starling.textures.Texture;
 	import starling.textures.TextureAtlas;
+	import starling.text.TextField;
 	
 	import com.emibap.textureAtlas.TextureItem;
 	
@@ -19,15 +26,18 @@ package com.emibap.textureAtlas
 	 * @author Emibap (Emiliano Angelini) - http://www.emibap.com
 	 * Most of this comes thanks to the inspiration (and code) of Thibault Imbert (http://www.bytearray.org) and Nicolas Gans (http://www.flashxpress.net/)
 	 * 
-	 * Dynamic Texture Atlas Generator (Starling framework Extension)
+	 * Dynamic Texture Atlas and Bitmap Font Generator (Starling framework Extension)
 	 * ========
 	 *
 	 * This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime.
-	 * By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures.
+	 * It can also register bitmap Fonts from system or embedded regular fonts.
+	 * By using it, you won't have to statically create your spritesheets or fonts. For instance, you can just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures.
+	 * Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 	 * This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 	 *
-	 * # version 0.8 #
-	 * - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
+	 * # version 0.9 #
+	 * - Added Bitmap Font creation support
+	 * - Added the 
 	 * - Scaling also applies to filters.
 	 * - Added Margin and PreserveColor Properties
 	 *
@@ -46,17 +56,20 @@ package com.emibap.textureAtlas
 	 *
 	 * ### Whish List ###
 	 * * Optional division of the process into small intervals (for smooth performance of the app)
+	 * * Bitmap Fonts creation based on system or embedded fonts
 	 *
 	 * ### Usage ###
+	 * 
+	 * 
 	 * 	Use the static method DynamicAtlas.fromMovieClipContainer.
 	 *
 	 * 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
 	 *
 	 *	Params:
-	 *		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
-	 *		* scaleFactor:Number - The scaling facture to apply to every object. Default value is 1 (no scaling).
-	 *		* margin:uint - The ammount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
-	 *		* preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
+	 * 	- swf:MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. I must contain named instances of every display object that will be rasterized and become the subtextures of your Atlas.
+	 *  - scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
+	 *  - margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
+	 *  - preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
 	 *		
 	 * 	Returns:
 	 * 		* A TextureAtlas.
@@ -70,7 +83,12 @@ package com.emibap.textureAtlas
 	 *
 	 *  History:
 	 *  -------
-	 *
+	 * 
+	 * # version 0.8 #
+	 * - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
+	 * - Scaling also applies to filters.
+	 * - Added Margin and PreserveColor Properties
+	 * 
 	 * # version 0.7 #
 	 * First Public version
 	 **/
@@ -98,6 +116,15 @@ package com.emibap.textureAtlas
 		
 		}
 		
+		/**
+		 * This method will take a MovieClip sprite sheet (containing other display objects) and convert it into a Texture Atlas.
+		 * 
+		 * @param	swf:MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. I must contain named instances of every display object that will be rasterized and become the subtextures of your Atlas.
+		 * @param	scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
+		 * @param	margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
+		 * @param	preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
+		 * @return  TextureAtlas - The dynamically generated Texture Atlas.
+		 */
 		static public function fromMovieClipContainer(swf:MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):TextureAtlas
 		{
 			var parseFrame:Boolean = false;
@@ -222,7 +249,7 @@ package com.emibap.textureAtlas
 			return atlas;
 		}
 		
-		static protected function drawItem(clip:MovieClip, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
+		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
 		{
 			var bounds:Rectangle = clip.getBounds(clip.parent);
 			bounds.x = Math.floor(bounds.x);
@@ -261,7 +288,6 @@ package com.emibap.textureAtlas
 			realBounds.height = Math.max(realBounds.height, 1);
 			
 			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
-			
 			_mat = clip.transform.matrix;
 			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
 			
@@ -270,11 +296,12 @@ package com.emibap.textureAtlas
 			//realBounds.offset(-_x - _margin, -_y - _margin);
 			
 			var label:String = "";
-			
-			if (clip.currentLabel != _currentLab && clip.currentLabel != null)
-			{
-				_currentLab = clip.currentLabel;
-				label = _currentLab;
+			if (clip is MovieClip) {
+				if (clip["currentLabel"] != _currentLab && clip["currentLabel"] != null)
+				{
+					_currentLab = clip["currentLabel"];
+					label = _currentLab;
+				}
 			}
 			var item:TextureItem = new TextureItem(_bData, name, label);
 			_items.push(item);
@@ -325,6 +352,130 @@ package com.emibap.textureAtlas
 			return outString + numString;
 		}
 	
+		/**
+		* isEmbedded
+		* 
+		* @param	fontFamily:Boolean - The name of the Font
+		* @return Boolean - True if the font is an embedded one
+		*/
+		static protected function isEmbedded(fontFamily:String):Boolean 
+		{
+		   var embeddedFonts:Vector.<Font> = Vector.<Font>(Font.enumerateFonts());
+		   
+		   for (var i:int = embeddedFonts.length - 1; i > -1 && embeddedFonts[i].fontName != fontFamily; i--) { }
+		   
+		   return (i > -1);
+		   
+		}
+	   
+		static public function bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void {
+			var format:TextFormat = new TextFormat(fontFamily, fontSize, 0xFFFFFF, bold, italic);
+			var tf:flash.text.TextField = new flash.text.TextField();
+			
+			tf.autoSize = TextFieldAutoSize.LEFT;
+			
+			
+			// If the font is an embedded one (I couldn't get to work the Array.indexOf method) :(
+			if (isEmbedded(fontFamily)) {
+				tf.antiAliasType = AntiAliasType.ADVANCED;
+				tf.embedFonts = true;
+			}
+			
+			tf.defaultTextFormat = format;
+			tf.text = chars;
+			
+			bitmapFontFromTextField(tf, charMarginX);
+		}
+		
+		static public function bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void {
+			var charCol:Vector.<String> = Vector.<String>(tf.text.split(""));
+			var format:TextFormat = tf.defaultTextFormat;
+			var fontFamily:String = format.font;
+			var fontSize:Object = format.size;
+			
+			var oldAutoSize:String = tf.autoSize;
+			tf.autoSize = TextFieldAutoSize.LEFT;
+			
+			var canvasData:BitmapData;
+			var texture:Texture;
+			var xml:XML;
+			
+			var myChar:String;
+			
+			_margin = 0;
+			_preserveColor = true;
+			
+			_items = [];
+			var itm:TextureItem;
+			var itemsLen:int;
+			
+			if (!_canvas) _canvas = new Sprite();
+			
+			// Add the blank space char if not present;
+			if (charCol.indexOf(" ") == -1) charCol.push(" ");
+				
+			for (var i:int = charCol.length - 1; i > -1; i--) {
+				myChar = tf.text = charCol[i];
+				drawItem(tf, myChar.charCodeAt().toString());
+			}
+			
+			_currentLab = "";
+			
+			layoutChildren();
+			
+			canvasData = new BitmapData(_canvas.width, _canvas.height, true, 0x000000);
+			canvasData.draw(_canvas);
+			
+			itemsLen = _items.length;
+			
+			xml = new XML(<font></font>);
+			var infoNode:XML = new XML(<info />);
+			infoNode.@face = fontFamily;
+			infoNode.@size = fontSize;
+			xml.appendChild(infoNode);
+			//var commonNode:XML = new XML(<common alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0" />);
+			var commonNode:XML = new XML(<common />);
+			commonNode.@lineHeight = fontSize;
+			xml.appendChild(commonNode);
+			xml.appendChild(new XML(<pages><page id="0" file="texture.png" /></pages>));
+			var charsNode:XML = new XML(<chars> </chars>);
+			charsNode.@count = itemsLen;
+			var charNode:XML;
+			
+			for (var k:uint = 0; k < itemsLen; k++)
+			{
+				itm = _items[k];
+				
+				itm.graphic.dispose();
+				
+				// xml
+				charNode = new XML(<char page="0" xoffset="0" yoffset="0"/>); 
+				charNode.@id = itm.textureName;
+				charNode.@x = itm.x;
+				charNode.@y = itm.y;
+				charNode.@width = itm.width;
+				charNode.@height = itm.height;
+				charNode.@xadvance = itm.width + 2*charMarginX;
+				charsNode.appendChild(charNode);
+			}
+			
+			xml.appendChild(charsNode);
+			
+			texture = Texture.fromBitmapData(canvasData);
+			TextField.registerBitmapFont(new BitmapFont(texture, xml));
+			
+			_items.length = 0;
+			_canvas.removeChildren();
+			
+			tf.autoSize = oldAutoSize;
+			tf.text = charCol.join();
+			
+			_items = null;
+			xml = null;
+			_canvas = null;
+			_currentLab = null;
+		}
+		
 	}
 
 }

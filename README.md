@@ -1,12 +1,15 @@
-Dynamic Texture Atlas Generator (Starling framework Extension)
+Dynamic Texture Atlas and Bitmap Font Generator (Starling framework Extension)
 ========
 
-This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime. 
-By using it, you won't have to statically create your spritesheets. Just take a regular MovieClip containing all the display objects you wish to put into your Atlas, and convert everything from vectors to bitmap textures. 
+This tool will convert any MovieClip containing Other MovieClips, Sprites or Graphics into a starling Texture Atlas, all in runtime.
+It can also register bitmap Fonts from system or embedded regular fonts.
+By using it, you won't have to statically create your spritesheets or fonts. For instance, you can just take a regular MovieClip containing all the display objects you wish to put into your Altas, and convert everything from vectors to bitmap textures.
+Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 
-# version 0.8 #
-- Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
+# version 0.9 #
+- Added Bitmap Font creation support
+- Added the 
 - Scaling also applies to filters.
 - Added Margin and PreserveColor Properties
 
@@ -17,38 +20,47 @@ This extension could save you a lot of time specially if you'll be coding mobile
 * Color transforms (tint, alpha) are optionally captured
 * Scales the objects (and also the filters) to a specified value
 * Automatically detects the objects bounds so you don't necessarily have to set the registration points to TOP LEFT
+* Registers Bitmap Fonts based on system or embedded fonts from strings or from good old Flash TextFields
 
 ### TODO List ###
 
 * Further code optimization
+* A better implementation of the Bitmap Font creation process
 * Documentation (?)
 
-### Wish List ###
+### Whish List ###
 * Optional division of the process into small intervals (for smooth performance of the app)
+* fromClassVector function. // DynamicAtlas.fromClassVector(Vector.<Class>([SymbolOne, SymbolTwo])); Thank you Thomas Haselwanter :)
 
 ### Usage ###
-	Use the static method DynamicAtlas.fromMovieClipContainer.
+
+	You can use the following static methods (examples at the gitHub Repo):
 	
-	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
-	
-	Params:
-		* swf:flash.display.MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. It should contain named instances of all the MovieClips that will become the subtextures of your Atlas.
-		* scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
-		* margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
-		* preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
-		
-	Returns:
-		* A TextureAtlas.
-		
+	[Texture Atlas creation]
+	- DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
+
+[Bitmap Font registration]
+- DynamicAtlas.bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void
+- DynamicAtlas.bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void
+
 	Enclose inside a try/catch for error handling:
 		try {
 				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
 			} catch (e:Error) {
 				trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
 			}
-### History ###
-#### version 0.7 ####
+
+ History:
+ -------
+
+# version 0.8 #
+- Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
+- Scaling also applies to filters.
+- Added Margin and PreserveColor Properties
+
+# version 0.7 #
 First Public version
+
 
 ### Steps to make your own Dynamic Texture Atlas ###
 #### Base Sprite sheet creation (Inside Flash IDE) ####
@@ -58,14 +70,20 @@ Drag all the MovieClips you want rendered to the main stage and name them.
 Export the swf.
 
 You can also drag all the MovieClips inside another Clip and assign a class to it if you prefer not to load an external swf.
+Dynamically creating the MovieClip container and every one of its children is also possible.
 
 #### TextureAtlas conversion ####
 Load the sprite sheet swf or create an instance of it as a MovieClip
 Use the DynamicAtlas.fromMovieClipContainer() static method to convert your flash.display.MovieClip to a starling.textures.TextureAtlas.
 (don't forget to destroy your now useless MovieClip)
 
+### Steps for making your own Dynamic Bitmap Font ###
+You can use an embedded font and call the DynamicAtlas.bitmapFontFromString method, passing the chars to be rasterized as well as your font.
+Also, you can create a TextField, assign filters, color transforms and setting the chars to be rasterized into its text and then call the DynamicAtlas.bitmapFontFromTextField function.
+The selected font will be dynamically converted to a Starling Bitmap Font.
+
 ### Using the sample included in the package ###
-The sample included is a simple FlashDevelop project which uses a library item as base MovieClip to create a TextureAtlas at runtime.
+The sample included is a simple FlashDevelop project which uses a library item as base MovieClip to create a TextureAtlas and some Bitmap Fonts at runtime.
 If you plan to use it, you need to add the Classpaths of your copy of the starling framework and of this extension (dynamicTextureAtlasGenerator).
 You should also link the sample swc to your project to be able to use the assets inside of it.
 #### Requirements ####

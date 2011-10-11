@@ -48,31 +48,28 @@ package com.emibap.textureAtlas
 	 * * Color transforms (tint, alpha) are optionally captured
 	 * * Scales the objects (and also the filters) to a specified value
 	 * * Automatically detects the objects bounds so you don't necessarily have to set the registration points to TOP LEFT
+	 * * Registers Bitmap Fonts based on system or embedded fonts from strings or from good old Flash TextFields
 	 * 
 	 * ### TODO List ###
 	 *
 	 * * Further code optimization
+	 * * A better implementation of the Bitmap Font creation process
 	 * * Documentation (?)
 	 *
 	 * ### Whish List ###
 	 * * Optional division of the process into small intervals (for smooth performance of the app)
-	 * * Bitmap Fonts creation based on system or embedded fonts
-	 *
+	 * * fromClassVector function. // DynamicAtlas.fromClassVector(Vector.<Class>([SymbolOne, SymbolTwo])); Thank you Thomas Haselwanter :)
+	 * 
 	 * ### Usage ###
 	 * 
-	 * 
-	 * 	Use the static method DynamicAtlas.fromMovieClipContainer.
+	 * 	You can use the following static methods (examples at the gitHub Repo):
+	 *	
+	 * 	[Texture Atlas creation]
+	 * 	- DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
 	 *
-	 * 	DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
-	 *
-	 *	Params:
-	 * 	- swf:MovieClip - The MovieClip sprite sheet you wish to convert into a TextureAtlas. I must contain named instances of every display object that will be rasterized and become the subtextures of your Atlas.
-	 *  - scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
-	 *  - margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
-	 *  - preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
-	 *		
-	 * 	Returns:
-	 * 		* A TextureAtlas.
+	 * [Bitmap Font registration]
+	 * - DynamicAtlas.bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void
+	 * - DynamicAtlas.bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void
 	 *
 	 * 	Enclose inside a try/catch for error handling:
 	 * 		try {
@@ -115,6 +112,137 @@ package com.emibap.textureAtlas
 		{
 		
 		}
+		
+		// Private methods
+		
+		static protected function appendIntToString(num:int, numOfPlaces:int):String
+		{
+			var numString:String = num.toString();
+			var outString:String = "";
+			for (var i:int = 0; i < numOfPlaces - numString.length; i++)
+			{
+				outString += "0";
+			}
+			return outString + numString;
+		}
+		
+		static protected function layoutChildren():void
+		{
+			var xPos:Number = 0;
+			var yPos:Number = 0;
+			var maxY:Number = 0;
+			var len:int = _items.length;
+			
+			var itm:TextureItem;
+			
+			for (var i:uint = 0; i < len; i++)
+			{
+				itm = _items[i];
+				if ((xPos + itm.width) > DEFAULT_CANVAS_WIDTH)
+				{
+					xPos = 0;
+					yPos += maxY;
+					maxY = 0;
+				}
+				if (itm.height + 1 > maxY)
+				{
+					maxY = itm.height + 1;
+				}
+				itm.x = xPos;
+				itm.y = yPos;
+				xPos += itm.width + 1;
+			}
+		}
+	
+		/**
+		* isEmbedded
+		* 
+		* @param	fontFamily:Boolean - The name of the Font
+		* @return Boolean - True if the font is an embedded one
+		*/
+		static protected function isEmbedded(fontFamily:String):Boolean 
+		{
+		   var embeddedFonts:Vector.<Font> = Vector.<Font>(Font.enumerateFonts());
+		   
+		   for (var i:int = embeddedFonts.length - 1; i > -1 && embeddedFonts[i].fontName != fontFamily; i--) { }
+		   
+		   return (i > -1);
+		   
+		}
+		
+		/**
+		 * drawItem - This will actually rasterize the display object passed as a parameter
+		 * @param	clip
+		 * @param	name
+		 * @param	baseName
+		 * @param	clipColorTransform
+		 * @return TextureItem
+		 */
+		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
+		{
+			var bounds:Rectangle = clip.getBounds(clip.parent);
+			bounds.x = Math.floor(bounds.x);
+			bounds.y = Math.floor(bounds.y);
+			bounds.height = Math.ceil(bounds.height);
+			bounds.width = Math.ceil(bounds.width);
+			
+			var realBounds:Rectangle = new Rectangle(0, 0, bounds.width + _margin * 2, bounds.height + _margin * 2);
+			
+			// Checking filters in case we need to expand the outer bounds
+			if (clip.filters.length > 0)
+			{
+				// filters
+				var j:int = 0;
+				//var clipFilters:Array = clipChild.filters.concat();
+				var clipFilters:Array = clip.filters;
+				var clipFiltersLength:int = clipFilters.length;
+				var tmpBData:BitmapData;
+				var filterRect:Rectangle;
+				
+				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
+				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
+				tmpBData.dispose();
+				
+				while (++j < clipFiltersLength)
+				{
+					tmpBData = new BitmapData(filterRect.width, filterRect.height, true, 0);
+					filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
+					realBounds = realBounds.union(filterRect);
+					tmpBData.dispose();
+				}
+			}
+			
+			realBounds.offset(bounds.x, bounds.y);
+			realBounds.width = Math.max(realBounds.width, 1);
+			realBounds.height = Math.max(realBounds.height, 1);
+			
+			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
+			_mat = clip.transform.matrix;
+			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
+			
+			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
+			
+			//realBounds.offset(-_x - _margin, -_y - _margin);
+			
+			var label:String = "";
+			if (clip is MovieClip) {
+				if (clip["currentLabel"] != _currentLab && clip["currentLabel"] != null)
+				{
+					_currentLab = clip["currentLabel"];
+					label = _currentLab;
+				}
+			}
+			var item:TextureItem = new TextureItem(_bData, name, label);
+			_items.push(item);
+			_canvas.addChild(item);
+			
+			tmpBData = null;
+			_bData = null;
+			
+			return item;
+		}
+		
+		// Public methods
 		
 		/**
 		 * This method will take a MovieClip sprite sheet (containing other display objects) and convert it into a Texture Atlas.
@@ -249,125 +377,16 @@ package com.emibap.textureAtlas
 			return atlas;
 		}
 		
-		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
-		{
-			var bounds:Rectangle = clip.getBounds(clip.parent);
-			bounds.x = Math.floor(bounds.x);
-			bounds.y = Math.floor(bounds.y);
-			bounds.height = Math.ceil(bounds.height);
-			bounds.width = Math.ceil(bounds.width);
-			
-			var realBounds:Rectangle = new Rectangle(0, 0, bounds.width + _margin * 2, bounds.height + _margin * 2);
-			
-			// Checking filters in case we need to expand the outer bounds
-			if (clip.filters.length > 0)
-			{
-				// filters
-				var j:int = 0;
-				//var clipFilters:Array = clipChild.filters.concat();
-				var clipFilters:Array = clip.filters;
-				var clipFiltersLength:int = clipFilters.length;
-				var tmpBData:BitmapData;
-				var filterRect:Rectangle;
-				
-				tmpBData = new BitmapData(realBounds.width, realBounds.height, false);
-				filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
-				tmpBData.dispose();
-				
-				while (++j < clipFiltersLength)
-				{
-					tmpBData = new BitmapData(filterRect.width, filterRect.height, true, 0);
-					filterRect = tmpBData.generateFilterRect(tmpBData.rect, clipFilters[j]);
-					realBounds = realBounds.union(filterRect);
-					tmpBData.dispose();
-				}
-			}
-			
-			realBounds.offset(bounds.x, bounds.y);
-			realBounds.width = Math.max(realBounds.width, 1);
-			realBounds.height = Math.max(realBounds.height, 1);
-			
-			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
-			_mat = clip.transform.matrix;
-			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
-			
-			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
-			
-			//realBounds.offset(-_x - _margin, -_y - _margin);
-			
-			var label:String = "";
-			if (clip is MovieClip) {
-				if (clip["currentLabel"] != _currentLab && clip["currentLabel"] != null)
-				{
-					_currentLab = clip["currentLabel"];
-					label = _currentLab;
-				}
-			}
-			var item:TextureItem = new TextureItem(_bData, name, label);
-			_items.push(item);
-			_canvas.addChild(item);
-			
-			tmpBData = null;
-			_bData = null;
-			
-			return item;
-		}
-		
-		static public function layoutChildren():void
-		{
-			var xPos:Number = 0;
-			var yPos:Number = 0;
-			var maxY:Number = 0;
-			var len:int = _items.length;
-			
-			var itm:TextureItem;
-			
-			for (var i:uint = 0; i < len; i++)
-			{
-				itm = _items[i];
-				if ((xPos + itm.width) > DEFAULT_CANVAS_WIDTH)
-				{
-					xPos = 0;
-					yPos += maxY;
-					maxY = 0;
-				}
-				if (itm.height + 1 > maxY)
-				{
-					maxY = itm.height + 1;
-				}
-				itm.x = xPos;
-				itm.y = yPos;
-				xPos += itm.width + 1;
-			}
-		}
-		
-		static protected function appendIntToString(num:int, numOfPlaces:int):String
-		{
-			var numString:String = num.toString();
-			var outString:String = "";
-			for (var i:int = 0; i < numOfPlaces - numString.length; i++)
-			{
-				outString += "0";
-			}
-			return outString + numString;
-		}
-	
 		/**
-		* isEmbedded
-		* 
-		* @param	fontFamily:Boolean - The name of the Font
-		* @return Boolean - True if the font is an embedded one
-		*/
-		static protected function isEmbedded(fontFamily:String):Boolean 
-		{
-		   var embeddedFonts:Vector.<Font> = Vector.<Font>(Font.enumerateFonts());
-		   
-		   for (var i:int = embeddedFonts.length - 1; i > -1 && embeddedFonts[i].fontName != fontFamily; i--) { }
-		   
-		   return (i > -1);
-		   
-		}
-	   
+		 * This method will register a Bitmap Font based on each char that belongs to a String.
+		 * 
+		 * @param	chars:String - The collection of chars which will become the Bitmap Font
+		 * @param	fontFamily:String - The name of the Font that will be converted to a Bitmap Font
+		 * @param	fontSize:Number - The size in pixels of the font.
+		 * @param	bold:Boolean - A flag indicating if the font will be rasterized as bold.
+		 * @param	italic:Boolean - A flag indicating if the font will be rasterized as italic.
+		 * @param	charMarginX:int - The number of pixels that each character should have as horizontal margin (negative values are allowed). Default value is 0.
+		 */
 		static public function bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void {
 			var format:TextFormat = new TextFormat(fontFamily, fontSize, 0xFFFFFF, bold, italic);
 			var tf:flash.text.TextField = new flash.text.TextField();
@@ -387,6 +406,12 @@ package com.emibap.textureAtlas
 			bitmapFontFromTextField(tf, charMarginX);
 		}
 		
+		/**
+		 * This method will register a Bitmap Font based on each char that belongs to a regular flash TextField, rasterizing filters and color transforms as well.
+		 * 
+		 * @param	tf:flash.text.TextField - The textfield that will be used to rasterize every char of the text property
+		 * @param	charMarginX:int - The number of pixels that each character should have as horizontal margin (negative values are allowed). Default value is 0.
+		 */
 		static public function bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void {
 			var charCol:Vector.<String> = Vector.<String>(tf.text.split(""));
 			var format:TextFormat = tf.defaultTextFormat;

@@ -86,6 +86,9 @@ The selected font will be dynamically converted to a Starling Bitmap Font.
 The sample included is a simple FlashDevelop project which uses a library item as base MovieClip to create a TextureAtlas and some Bitmap Fonts at runtime.
 If you plan to use it, you need to add the Classpaths of your copy of the starling framework and of this extension (dynamicTextureAtlasGenerator).
 You should also link the sample swc to your project to be able to use the assets inside of it.
+For the Dynamic Bitmap Fonts to work, you need to have the following fonts installed and embedded into a swc or directly into the project (Class names are defined inside the sample_for_atlas.fla file):
+		 * - Verdana
+		 * - Comic Sans
 #### Requirements ####
 Please refer to the [starling documentation](http://doc.starling-framework.org/core/) or to the [starling tutorial](http://www.bytearray.org/?p=3371) for requirements and setup.
 

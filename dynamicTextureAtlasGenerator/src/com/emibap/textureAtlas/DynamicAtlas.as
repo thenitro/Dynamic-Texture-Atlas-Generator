@@ -25,6 +25,7 @@ package com.emibap.textureAtlas
 	 * DynamicAtlas.as
 	 * https://github.com/emibap/Dynamic-Texture-Atlas-Generator
 	 * @author Emibap (Emiliano Angelini) - http://www.emibap.com
+		 * Contribution by Thomas Haselwanter - https://github.com/thomashaselwanter
 	 * Most of this comes thanks to the inspiration (and code) of Thibault Imbert (http://www.bytearray.org) and Nicolas Gans (http://www.flashxpress.net/)
 	 * 
 	 * Dynamic Texture Atlas and Bitmap Font Generator (Starling framework Extension)
@@ -36,15 +37,12 @@ package com.emibap.textureAtlas
 	 * Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 	 * This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 	 *
-	 * # version 0.9 #
-	 * - Added Bitmap Font creation support
-	 * - Added the 
-	 * - Scaling also applies to filters.
-	 * - Added Margin and PreserveColor Properties
+	 * # version 0.9.5 #
+	 * - Added the fromClassVector static function. Thank you Thomas Haselwanter
 	 *
 	 * ### Features ###
 	 *
-	 * * Dynamic creation of a Texture Atlas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet
+	 * * Dynamic creation of a Texture Atlas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet, or from a Vector of Classes
 	 * * Filters made to the objects are captured
 	 * * Color transforms (tint, alpha) are optionally captured
 	 * * Scales the objects (and also the filters) to a specified value
@@ -59,7 +57,6 @@ package com.emibap.textureAtlas
 	 *
 	 * ### Whish List ###
 	 * * Optional division of the process into small intervals (for smooth performance of the app)
-	 * * fromClassVector function. // DynamicAtlas.fromClassVector(Vector.<Class>([SymbolOne, SymbolTwo])); Thank you Thomas Haselwanter :)
 	 * 
 	 * ### Usage ###
 	 * 
@@ -67,6 +64,7 @@ package com.emibap.textureAtlas
 	 *	
 	 * 	[Texture Atlas creation]
 	 * 	- DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
+	 * 	- DynamicAtlas.fromClassVector(assets:Vector.<Class>, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
 	 *
 	 * [Bitmap Font registration]
 	 * - DynamicAtlas.bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void
@@ -81,6 +79,11 @@ package com.emibap.textureAtlas
 	 *
 	 *  History:
 	 *  -------
+	 * # version 0.9 #
+	 * - Added Bitmap Font creation support
+	 * - Added the 
+	 * - Scaling also applies to filters.
+	 * - Added Margin and PreserveColor Properties
 	 * 
 	 * # version 0.8 #
 	 * - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.
@@ -248,7 +251,7 @@ package com.emibap.textureAtlas
         /**
          * This method takes a vector of MovieClip class and converts it into a Texture Atlas.
 		 *
-         * @param	assets:Vector.<Class> - The MovieClips class you wish to convert into a TextureAtlas. Must contain classes whose instances are of type MovieClip that will be rasterized and become the subtextures of your Atlas.
+         * @param	assets:Vector.<Class> - The MovieClip classes you wish to convert into a TextureAtlas. Must contain classes whose instances are of type MovieClip that will be rasterized and become the subtextures of your Atlas.
          * @param	scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
          * @param	margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
          * @param	preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).

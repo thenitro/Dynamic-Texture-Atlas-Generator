@@ -7,15 +7,12 @@ By using it, you won't have to statically create your spritesheets or fonts. For
 Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 
-# version 0.9 #
-- Added Bitmap Font creation support
-- Added the 
-- Scaling also applies to filters.
-- Added Margin and PreserveColor Properties
+# version 0.9.5 #
+- Added the fromClassVector static function. Thank you Thomas Haselwanter
 
 ### Features ###
 
-* Dynamic creation of a Texture Atlas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet
+* Dynamic creation of a Texture Atlas from a MovieClip (flash.display.MovieClip) container that could act as a sprite sheet, or from a Vector of Classes
 * Filters made to the objects are captured
 * Color transforms (tint, alpha) are optionally captured
 * Scales the objects (and also the filters) to a specified value
@@ -33,25 +30,30 @@ This extension could save you a lot of time specially if you'll be coding mobile
 * fromClassVector function. // DynamicAtlas.fromClassVector(Vector.<Class>([SymbolOne, SymbolTwo])); Thank you Thomas Haselwanter :)
 
 ### Usage ###
-
-	You can use the following static methods (examples at the gitHub Repo):
+You can use the following static methods (examples at the gitHub Repo):
 	
-	[Texture Atlas creation]
-	- DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
+[Texture Atlas creation]
+- DynamicAtlas.fromMovieClipContainer(swf:flash.display.MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
+- DynamicAtlas.fromClassVector(assets:Vector.<Class>, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):starling.textures.TextureAtlas
 
 [Bitmap Font registration]
 - DynamicAtlas.bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void
 - DynamicAtlas.bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void
 
-	Enclose inside a try/catch for error handling:
-		try {
-				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
-			} catch (e:Error) {
-				trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
-			}
+Enclose inside a try/catch for error handling:
+	try {
+		var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc);
+	} catch (e:Error) {
+		trace("There was an error in the creation of the texture Atlas. Please check if the dimensions of your clip exceeded the maximun allowed texture size. -", e.message);
+	}
 
  History:
  -------
+ # version 0.9 #
+ - Added Bitmap Font creation support
+ - Added the 
+ - Scaling also applies to filters.
+ - Added Margin and PreserveColor Properties
 
 # version 0.8 #
 - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.

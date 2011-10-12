@@ -272,7 +272,7 @@ package com.emibap.textureAtlas
         /** Retrieves all textures for a class. Returns <code>null</code> if it is not found.
          * This method can be used if TextureAtlass doesn't support classes.
          */
-        public function getTexturesByClass(textureAtlas:TextureAtlas, assetClass:Class):Vector.<Texture> {
+        static public function getTexturesByClass(textureAtlas:TextureAtlas, assetClass:Class):Vector.<Texture> {
             return textureAtlas.getTextures(getQualifiedClassName(assetClass));
         }
 		

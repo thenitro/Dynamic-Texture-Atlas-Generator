@@ -174,16 +174,7 @@ package com.emibap.textureAtlas
 		   
 		}
 		
-		/**
-		 * drawItem - This will actually rasterize the display object passed as a parameter
-		 * @param	clip
-		 * @param	name
-		 * @param	baseName
-		 * @param	clipColorTransform
-		 * @return TextureItem
-		 */
-		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null):TextureItem
-		{
+		static protected function getRealBounds(clip:DisplayObject):Rectangle {
 			var bounds:Rectangle = clip.getBounds(clip.parent);
 			bounds.x = Math.floor(bounds.x);
 			bounds.y = Math.floor(bounds.y);
@@ -220,6 +211,22 @@ package com.emibap.textureAtlas
 			realBounds.width = Math.max(realBounds.width, 1);
 			realBounds.height = Math.max(realBounds.height, 1);
 			
+			tmpBData = null;
+			return realBounds;
+		}
+		
+		/**
+		 * drawItem - This will actually rasterize the display object passed as a parameter
+		 * @param	clip
+		 * @param	name
+		 * @param	baseName
+		 * @param	clipColorTransform
+		 * @return TextureItem
+		 */
+		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null, frameBounds:Rectangle=null):TextureItem
+		{
+			var realBounds:Rectangle = getRealBounds(clip);
+			
 			_bData = new BitmapData(realBounds.width, realBounds.height, true, 0);
 			_mat = clip.transform.matrix;
 			_mat.translate(-realBounds.x + _margin, -realBounds.y + _margin);
@@ -236,11 +243,13 @@ package com.emibap.textureAtlas
 					label = _currentLab;
 				}
 			}
-			var item:TextureItem = new TextureItem(_bData, name, label);
+			
+			var item:TextureItem = new TextureItem(_bData, name, label, (-realBounds.x), (-realBounds.y), frameBounds.width, frameBounds.height);
+			
 			_items.push(item);
 			_canvas.addChild(item);
 			
-			tmpBData = null;
+			
 			_bData = null;
 			
 			return item;
@@ -285,12 +294,13 @@ package com.emibap.textureAtlas
 		 * @param	preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
 		 * @return  TextureAtlas - The dynamically generated Texture Atlas.
 		 */
-		static public function fromMovieClipContainer(swf:MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):TextureAtlas
+		static public function fromMovieClipContainer(swf:MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true, checkBounds:Boolean=false):TextureAtlas
 		{
 			var parseFrame:Boolean = false;
 			var selected:MovieClip;
 			var selectedTotalFrames:int;
 			var selectedColorTransform:ColorTransform;
+			var selectedBounds:Rectangle = new Rectangle(0, 0, 0, 0);
 			
 			var children:uint = swf.numChildren;
 			
@@ -354,13 +364,35 @@ package com.emibap.textureAtlas
 					}
 				}
 				
-				m = 0;
 				
+				
+				// Gets the frame bounds by performing a frame-by-frame check
+				if (selectedTotalFrames > 1 && checkBounds) {
+					selected.gotoAndStop(0);
+					//selectedBounds = selected.getBounds(selected.parent);
+					m = 0;
+					while (++m <= selectedTotalFrames)
+					{
+						selected.gotoAndStop(m);
+						var rb:Rectangle = getRealBounds(selected);
+						if (selectedBounds.x > rb.x) selectedBounds.x = rb.x;
+						if (selectedBounds.y > rb.y) selectedBounds.y = rb.y;
+						
+						if (rb.x > 0) rb.width += rb.x;
+						if (rb.y > 0) rb.height += rb.y;
+						
+						if (selectedBounds.width < rb.width) selectedBounds.width = rb.width;
+						if (selectedBounds.height < rb.height) selectedBounds.height = rb.height;
+						//selectedBounds.union(rb);
+					}
+				}
+				m = 0;
 				// Draw every frame
+				
 				while (++m <= selectedTotalFrames)
 				{
 					selected.gotoAndStop(m);
-					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform);
+					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform, selectedBounds);
 				}
 			}
 			
@@ -384,18 +416,22 @@ package com.emibap.textureAtlas
 				
 				// xml
 				subText = new XML(<SubTexture />); 
+				subText.@name = itm.textureName;
 				subText.@x = itm.x;
 				subText.@y = itm.y;
 				subText.@width = itm.width;
 				subText.@height = itm.height;
-				subText.@name = itm.textureName;
+				subText.@frameX = itm.frameX;
+				subText.@frameY = itm.frameY;
+				subText.@frameWidth = itm.frameWidth;
+				subText.@frameHeight = itm.frameHeight;
+				
 				if (itm.frameName != "")
 					subText.@frameLabel = itm.frameName;
 				xml.appendChild(subText);
 			}
 			texture = Texture.fromBitmapData(canvasData);
 			atlas = new TextureAtlas(texture, xml);
-			
 			
 			_items.length = 0;
 			_canvas.removeChildren();
@@ -418,8 +454,9 @@ package com.emibap.textureAtlas
 		 * @param	bold:Boolean - A flag indicating if the font will be rasterized as bold.
 		 * @param	italic:Boolean - A flag indicating if the font will be rasterized as italic.
 		 * @param	charMarginX:int - The number of pixels that each character should have as horizontal margin (negative values are allowed). Default value is 0.
+		 * @param	fontCustomID:String - A custom font family name indicated by the user. Helpful when using differnt effects for the same font. [Optional]
 		 */
-		static public function bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0):void {
+		static public function bitmapFontFromString(chars:String, fontFamily:String, fontSize:Number = 12, bold:Boolean = false, italic:Boolean = false, charMarginX:int=0, fontCustomID:String=""):void {
 			var format:TextFormat = new TextFormat(fontFamily, fontSize, 0xFFFFFF, bold, italic);
 			var tf:flash.text.TextField = new flash.text.TextField();
 			
@@ -435,7 +472,8 @@ package com.emibap.textureAtlas
 			tf.defaultTextFormat = format;
 			tf.text = chars;
 			
-			bitmapFontFromTextField(tf, charMarginX);
+			if (fontCustomID == "") fontCustomID = fontFamily;
+			bitmapFontFromTextField(tf, charMarginX, fontCustomID);
 		}
 		
 		/**
@@ -443,8 +481,9 @@ package com.emibap.textureAtlas
 		 * 
 		 * @param	tf:flash.text.TextField - The textfield that will be used to rasterize every char of the text property
 		 * @param	charMarginX:int - The number of pixels that each character should have as horizontal margin (negative values are allowed). Default value is 0.
+		 * @param	fontCustomID:String - A custom font family name indicated by the user. Helpful when using differnt effects for the same font. [Optional]
 		 */
-		static public function bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0):void {
+		static public function bitmapFontFromTextField(tf:flash.text.TextField, charMarginX:int=0, fontCustomID:String=""):void {
 			var charCol:Vector.<String> = Vector.<String>(tf.text.split(""));
 			var format:TextFormat = tf.defaultTextFormat;
 			var fontFamily:String = format.font;
@@ -485,9 +524,10 @@ package com.emibap.textureAtlas
 			
 			itemsLen = _items.length;
 			
+			
 			xml = new XML(<font></font>);
 			var infoNode:XML = new XML(<info />);
-			infoNode.@face = fontFamily;
+			infoNode.@face = (fontCustomID == "")? fontFamily : fontCustomID;
 			infoNode.@size = fontSize;
 			xml.appendChild(infoNode);
 			//var commonNode:XML = new XML(<common alphaChnl="1" redChnl="0" greenChnl="0" blueChnl="0" />);

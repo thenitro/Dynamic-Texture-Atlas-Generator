@@ -42,7 +42,7 @@ package {
 			try {
 				var mc:SheetMC = new SheetMC();
 				var t1:uint = getTimer();
-				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc, .5);
+				var atlas:TextureAtlas = DynamicAtlas.fromMovieClipContainer(mc, .5, 0, true, true);
 				var total:uint = getTimer() - t1;
 				//trace("atlas:", atlas);
 				trace(total, "msecs elapsed while converting...");

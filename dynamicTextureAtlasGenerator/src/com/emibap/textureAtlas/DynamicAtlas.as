@@ -85,7 +85,6 @@ package com.emibap.textureAtlas
 	 * 
 	 * # version 0.9 #
 	 * - Added Bitmap Font creation support
-	 * - Added the 
 	 * - Scaling also applies to filters.
 	 * - Added Margin and PreserveColor Properties
 	 * 

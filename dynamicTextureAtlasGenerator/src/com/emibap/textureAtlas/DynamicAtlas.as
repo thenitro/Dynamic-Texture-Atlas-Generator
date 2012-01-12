@@ -37,8 +37,9 @@ package com.emibap.textureAtlas
 	 * Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 	 * This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 	 *
-	 * # version 0.9.5 #
-	 * - Added the fromClassVector static function. Thank you Thomas Haselwanter
+	 * # version 1.0 #
+	 * - Added the checkBounds parameter to scan the clip prior the rasterization in order to get the bounds of the entire MovieClip (prevent scaling in some cases). Thank you Aymeric Lamboley.
+	 * - Added the fontCustomID parameter to the Bitmap font creation. Thank you Regan.
 	 *
 	 * ### Features ###
 	 *
@@ -79,6 +80,9 @@ package com.emibap.textureAtlas
 	 *
 	 *  History:
 	 *  -------
+	 * # version 0.9.5 #
+	 * - Added the fromClassVector static function. Thank you Thomas Haselwanter
+	 * 
 	 * # version 0.9 #
 	 * - Added Bitmap Font creation support
 	 * - Added the 
@@ -221,6 +225,7 @@ package com.emibap.textureAtlas
 		 * @param	name
 		 * @param	baseName
 		 * @param	clipColorTransform
+		 * @param	frameBounds
 		 * @return TextureItem
 		 */
 		static protected function drawItem(clip:DisplayObject, name:String = "", baseName:String = "", clipColorTransform:ColorTransform = null, frameBounds:Rectangle=null):TextureItem
@@ -233,8 +238,6 @@ package com.emibap.textureAtlas
 			
 			_bData.draw(clip, _mat, _preserveColor ? clipColorTransform : null);
 			
-			//realBounds.offset(-_x - _margin, -_y - _margin);
-			
 			var label:String = "";
 			if (clip is MovieClip) {
 				if (clip["currentLabel"] != _currentLab && clip["currentLabel"] != null)
@@ -244,7 +247,14 @@ package com.emibap.textureAtlas
 				}
 			}
 			
-			var item:TextureItem = new TextureItem(_bData, name, label, (-realBounds.x), (-realBounds.y), frameBounds.width, frameBounds.height);
+			if (frameBounds) {
+				realBounds.x = frameBounds.x - realBounds.x;
+				realBounds.y = frameBounds.y - realBounds.y;
+				realBounds.width = frameBounds.width;
+				realBounds.height = frameBounds.height;
+			}
+			
+			var item:TextureItem = new TextureItem(_bData, name, label, realBounds.x, realBounds.y, realBounds.width, realBounds.height);
 			
 			_items.push(item);
 			_canvas.addChild(item);
@@ -264,10 +274,10 @@ package com.emibap.textureAtlas
          * @param	scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
          * @param	margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
          * @param	preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
+		 * @param 	checkBounds:Boolean - A Flag used to scan the clip prior the rasterization in order to get the bounds of the entire MovieClip. By default is false because it adds overhead to the process.
          * @return  TextureAtlas - The dynamically generated Texture Atlas.
-         * @return
          */
-        static public function fromClassVector(assets:Vector.<Class>, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true):TextureAtlas
+        static public function fromClassVector(assets:Vector.<Class>, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true, checkBounds:Boolean=false):TextureAtlas
         {
             var container:MovieClip = new MovieClip();
             for each (var assetClass:Class in assets) {
@@ -275,7 +285,7 @@ package com.emibap.textureAtlas
                 assetInstance.name = getQualifiedClassName(assetClass);
                 container.addChild(assetInstance);
             }
-            return fromMovieClipContainer(container, scaleFactor, margin, preserveColor);
+            return fromMovieClipContainer(container, scaleFactor, margin, preserveColor, checkBounds);
         }
 
         /** Retrieves all textures for a class. Returns <code>null</code> if it is not found.
@@ -292,6 +302,7 @@ package com.emibap.textureAtlas
 		 * @param	scaleFactor:Number - The scaling factor to apply to every object. Default value is 1 (no scaling).
 		 * @param	margin:uint - The amount of pixels that should be used as the resulting image margin (for each side of the image). Default value is 0 (no margin).
 		 * @param	preserveColor:Boolean - A Flag which indicates if the color transforms should be captured or not. Default value is true (capture color transform).
+		 * @param 	checkBounds:Boolean - A Flag used to scan the clip prior the rasterization in order to get the bounds of the entire MovieClip. By default is false because it adds overhead to the process.
 		 * @return  TextureAtlas - The dynamically generated Texture Atlas.
 		 */
 		static public function fromMovieClipContainer(swf:MovieClip, scaleFactor:Number = 1, margin:uint=0, preserveColor:Boolean = true, checkBounds:Boolean=false):TextureAtlas
@@ -300,7 +311,7 @@ package com.emibap.textureAtlas
 			var selected:MovieClip;
 			var selectedTotalFrames:int;
 			var selectedColorTransform:ColorTransform;
-			var selectedBounds:Rectangle = new Rectangle(0, 0, 0, 0);
+			var frameBounds:Rectangle = new Rectangle(0, 0, 0, 0);
 			
 			var children:uint = swf.numChildren;
 			
@@ -369,21 +380,12 @@ package com.emibap.textureAtlas
 				// Gets the frame bounds by performing a frame-by-frame check
 				if (selectedTotalFrames > 1 && checkBounds) {
 					selected.gotoAndStop(0);
-					//selectedBounds = selected.getBounds(selected.parent);
-					m = 0;
+					frameBounds = getRealBounds(selected);
+					m = 1;
 					while (++m <= selectedTotalFrames)
 					{
 						selected.gotoAndStop(m);
-						var rb:Rectangle = getRealBounds(selected);
-						if (selectedBounds.x > rb.x) selectedBounds.x = rb.x;
-						if (selectedBounds.y > rb.y) selectedBounds.y = rb.y;
-						
-						if (rb.x > 0) rb.width += rb.x;
-						if (rb.y > 0) rb.height += rb.y;
-						
-						if (selectedBounds.width < rb.width) selectedBounds.width = rb.width;
-						if (selectedBounds.height < rb.height) selectedBounds.height = rb.height;
-						//selectedBounds.union(rb);
+						frameBounds = frameBounds.union(getRealBounds(selected));
 					}
 				}
 				m = 0;
@@ -392,7 +394,7 @@ package com.emibap.textureAtlas
 				while (++m <= selectedTotalFrames)
 				{
 					selected.gotoAndStop(m);
-					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform, selectedBounds);
+					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform, frameBounds);
 				}
 			}
 			

@@ -7,8 +7,9 @@ By using it, you won't have to statically create your spritesheets or fonts. For
 Or you can select which font (specifying characters) you'd like to register as a Bitmap Font, using a string or passing a Regular TextField as a parameter.
 This extension could save you a lot of time specially if you'll be coding mobile apps with the [starling framework](http://www.starling-framework.org/).
 
-# version 0.9.5 #
-- Added the fromClassVector static function. Thank you Thomas Haselwanter
+# version 1.0 #
+- Added the checkBounds parameter to scan the clip prior the rasterization in order to get the bounds of the entire MovieClip (prevent scaling in some cases). Thank you Aymeric Lamboley.
+- Added the fontCustomID parameter to the Bitmap font creation. Thank you Regan.
 
 ### Features ###
 
@@ -49,11 +50,14 @@ Enclose inside a try/catch for error handling:
 
  History:
  -------
- # version 0.9 #
- - Added Bitmap Font creation support
- - Added the 
- - Scaling also applies to filters.
- - Added Margin and PreserveColor Properties
+# version 0.9.5 #
+- Added the fromClassVector static function. Thank you Thomas Haselwanter
+ 
+# version 0.9 #
+- Added Bitmap Font creation support
+- Added the 
+- Scaling also applies to filters.
+- Added Margin and PreserveColor Properties
 
 # version 0.8 #
 - Added the scaleFactor constructor parameter. Now you can define a custom scale to the final result.

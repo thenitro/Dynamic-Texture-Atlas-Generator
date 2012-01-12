@@ -28,7 +28,6 @@ This extension could save you a lot of time specially if you'll be coding mobile
 
 ### Whish List ###
 * Optional division of the process into small intervals (for smooth performance of the app)
-* fromClassVector function. // DynamicAtlas.fromClassVector(Vector.<Class>([SymbolOne, SymbolTwo])); Thank you Thomas Haselwanter :)
 
 ### Usage ###
 You can use the following static methods (examples at the gitHub Repo):

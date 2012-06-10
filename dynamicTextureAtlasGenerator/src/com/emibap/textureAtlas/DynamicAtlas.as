@@ -376,8 +376,9 @@ package com.emibap.textureAtlas
 				// Not all children will be MCs. Some could be sprites
 				if (selected is MovieClip)
 				{
+					selectedTotalFrames = MovieClip(selected).totalFrames;
 					// Gets the frame bounds by performing a frame-by-frame check
-					if (selectedTotalFrames > 1 && checkBounds) {
+					if (checkBounds) {
 						MovieClip(selected).gotoAndStop(0);
 						frameBounds = getRealBounds(selected);
 						m = 1;
@@ -387,20 +388,16 @@ package com.emibap.textureAtlas
 							frameBounds = frameBounds.union(getRealBounds(selected));
 						}
 					}
-					m = 0;
-					// Draw every frame
-					while (++m <= selectedTotalFrames)
-					{
-						MovieClip(selected).gotoAndStop(m);
-						drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform, frameBounds);
-					}
 				}
-				else
+				else selectedTotalFrames = 1;
+				m = 0;
+				// Draw every frame (if MC - else will just be one)
+				while (++m <= selectedTotalFrames)
 				{
-					// Not MC. Just draw the item once
+					if (selected is MovieClip)
+						MovieClip(selected).gotoAndStop(m);
 					drawItem(selected, selected.name + "_" + appendIntToString(m - 1, 5), selected.name, selectedColorTransform, frameBounds);
 				}
-				
 			}
 			
 			_currentLab = "";

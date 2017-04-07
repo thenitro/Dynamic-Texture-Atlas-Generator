@@ -565,7 +565,7 @@ package com.emibap.textureAtlas
 			xml.appendChild(charsNode);
 			
 			texture = Texture.fromBitmapData(canvasData);
-			TextField.registerBitmapFont(new BitmapFont(texture, xml));
+			TextField.registerCompositor(new BitmapFont(texture, xml), fontCustomID || fontFamily);
 			
 			_items.length = 0;
 			_canvas.removeChildren();
